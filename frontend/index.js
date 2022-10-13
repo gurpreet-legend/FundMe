@@ -3,6 +3,7 @@ import {abi, contractAddress} from "./constants.js"
 let connectBtn = document.getElementById("connectBtn")
 let fundBtn = document.getElementById("fundBtn")
 let withdrawBtn = document.getElementById("withdrawBtn")
+let balanceBtn = document.getElementById("balanceBtn")
 
 const connect = async () => {
         if (typeof window.ethereum !== "undefined"){
@@ -41,7 +42,6 @@ const withdraw = async () => {
         try {
             const response = await contract.withdraw()
             //  await reponse.wait(1)
-            await  listenForTransactionMine(response, provider)
         } catch {
             console.log(error)
         }
@@ -53,6 +53,8 @@ const withdraw = async () => {
 withdrawBtn.onclick = withdraw
 
 const fund = async () => {
+    const ethAmount = document.getElementById("ethAmount").value
+    console.log(`Funding with ${ethAmount}...`)
     if (typeof window.ethereum !== "undefined"){
         const provider = new ethers.providers.Web3Provider(window.ethereum)
         await provider.send('eth_requestAccounts', [])
@@ -64,9 +66,10 @@ const fund = async () => {
         const  contract = new ethers.Contract(contractAddress, abi, signer)
         
         try {
-            const response = await contract.fund()
+            const response = await contract.fund({
+                value: ethers.utils.parseEther("0.01")
+            })
             //  await reponse.wait(1)
-            await  listenForTransactionMine(response, provider)
         } catch {
             console.log(error)
         }
@@ -76,3 +79,19 @@ const fund = async () => {
     }
 }
 fundBtn.onclick = fund
+
+async function getBalance() {
+    let balanceText = document.getElementById("balanceText")
+    if (typeof window.ethereum !== "undefined") {
+      const provider = new ethers.providers.Web3Provider(window.ethereum)
+      try {
+        const balance = await provider.getBalance(contractAddress)
+        balanceText.innerHTML = `Balance: ${ethers.utils.formatEther(balance)} ETH`
+      } catch (error) {
+        console.log(error)
+      }
+    } else {
+        alert("Please install MetaMask 😓")
+    }
+}
+balanceBtn.onclick = getBalance
